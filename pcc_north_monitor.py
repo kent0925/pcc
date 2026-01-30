@@ -34,12 +34,21 @@ def run():
         return
 
     # 目標：政府電子採購網 - 每日招標公告
+    # 修改策略：D0001 錯誤通常代表需要 Session 或 Referer
+    home_url = "https://web.pcc.gov.tw/"
     target_url = "https://web.pcc.gov.tw/prkms/tender/common/noticeAll/readNoticeAll"
     
     session = get_session()
     
     try:
-        logger.info(f"正在連線至: {target_url}")
+        # [步驟 1.1] 先訪問首頁以取得 Cookies (建立 Session)
+        logger.info(f"正在連線至首頁以建立 Session: {home_url}")
+        session.get(home_url, timeout=30)
+        
+        # [步驟 1.2] 設定 Referer 並訪問目標頁面
+        session.headers.update({'Referer': home_url})
+        
+        logger.info(f"正在連線至目標頁面: {target_url}")
         res = session.get(target_url, timeout=30)
         res.raise_for_status() # 檢查 HTTP 狀態碼
         
