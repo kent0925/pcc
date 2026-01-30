@@ -1,0 +1,124 @@
+<!DOCTYPE html>
+<html lang="zh-TW">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>北部地區標案流標監控系統</title>
+    <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css">
+    <style>
+        :root { --pcc-blue: #004a91; }
+        .header-bg { background: var(--pcc-blue); color: white; padding: 2rem 0; margin-bottom: 2rem; }
+        .filter-card { border-left: 5px solid var(--pcc-blue); }
+        .budget-text { font-family: 'Courier New', Courier, monospace; font-weight: bold; color: #d9534f; }
+    </style>
+</head>
+<body class="bg-light">
+
+<div class="header-bg shadow">
+    <div class="container">
+        <h1>北部地區流標監控看板</h1>
+        <p class="mb-0">即時分析台北、新北、基隆、桃園、宜蘭、新竹之流標案件</p>
+    </div>
+</div>
+
+<div class="container">
+    <div class="card shadow-sm mb-4 filter-card">
+        <div class="card-body">
+            <div class="row g-3 align-items-end">
+                <div class="col-md-4">
+                    <label class="form-label fw-bold">最低預算篩選 (NTD)</label>
+                    <input type="number" id="minAmount" class="form-control" placeholder="輸入金額，例如 1000000" oninput="applyFilters()">
+                </div>
+                <div class="col-md-4">
+                    <label class="form-label fw-bold">地區快速篩選</label>
+                    <select id="cityFilter" class="form-select" onchange="applyFilters()">
+                        <option value="">全部北部縣市</option>
+                        <option value="台北市">台北市</option>
+                        <option value="新北市">新北市</option>
+                        <option value="桃園市">桃園市</option>
+                        <option value="新竹">新竹縣市</option>
+                        <option value="基隆">基隆/宜蘭</option>
+                    </select>
+                </div>
+                <div class="col-md-4 text-end">
+                    <button class="btn btn-outline-secondary" onclick="fetchData()">🔄 重新整理資料</button>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <div class="table-responsive shadow-sm rounded">
+        <table class="table table-hover bg-white align-middle">
+            <thead class="table-dark">
+                <tr>
+                    <th style="width: 120px;">案號</th>
+                    <th>標案名稱 / 招標機關</th>
+                    <th style="width: 100px;">地區</th>
+                    <th style="width: 150px;">預算金額</th>
+                    <th>流標原因</th>
+                </tr>
+            </thead>
+            <tbody id="data-table">
+                <tr><td colspan="5" class="text-center py-5">資料載入中，請稍候...</td></tr>
+            </tbody>
+        </table>
+    </div>
+</div>
+
+<script>
+    const API_URL = "https://script.google.com/macros/s/AKfycbwWNuc5yGNFJ5erxtpIY_MQHpYSUzUgPXpn7KJ-TCmRBy0pwOrdmOBSnFiIjPgEmhTT/exec"; // ⚠️ 請在此處貼上您的 GAS URL
+    let tenderData = [];
+
+    // 1. 從 GAS 獲取資料
+    async function fetchData() {
+        try {
+            const response = await fetch(API_URL);
+            tenderData = await response.json();
+            applyFilters();
+        } catch (error) {
+            document.getElementById('data-table').innerHTML = `<tr><td colspan="5" class="text-center text-danger">連線失敗：請檢查 GAS 部署權限是否設為「所有人」。</td></tr>`;
+        }
+    }
+
+    // 2. 執行過濾邏輯 (金額 + 地區)
+    function applyFilters() {
+        const minAmount = document.getElementById('minAmount').value || 0;
+        const cityKeyword = document.getElementById('cityFilter').value;
+
+        const filtered = tenderData.filter(item => {
+            const matchAmount = item.budget >= minAmount;
+            const matchCity = cityKeyword === "" || item.city.includes(cityKeyword);
+            return matchAmount && matchCity;
+        });
+
+        renderTable(filtered);
+    }
+
+    // 3. 渲染表格到網頁
+    function renderTable(data) {
+        const tableBody = document.getElementById('data-table');
+        if (data.length === 0) {
+            tableBody.innerHTML = `<tr><td colspan="5" class="text-center py-5">沒有符合篩選條件的標案。</td></tr>`;
+            return;
+        }
+
+        tableBody.innerHTML = data.map(item => `
+            <tr>
+                <td><small class="text-muted">${item.id}</small></td>
+                <td>
+                    <div class="fw-bold text-primary">${item.title}</div>
+                    <div class="small text-secondary">${item.org}</div>
+                </td>
+                <td><span class="badge bg-info text-dark">${item.city.substring(0, 3)}</span></td>
+                <td class="budget-text">NT$ ${Number(item.budget).toLocaleString()}</td>
+                <td><span class="text-danger small">${item.reason}</span></td>
+            </tr>
+        `).join('');
+    }
+
+    // 頁面開啟時自動執行
+    window.onload = fetchData;
+</script>
+
+</body>
+</html>
