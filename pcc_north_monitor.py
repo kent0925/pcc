@@ -6,7 +6,32 @@ import time
 # ⚠️ 填入您剛才部署的 GAS Web App URL
 GAS_URL = "https://script.google.com/macros/s/AKfycbwWNuc5yGNFJ5erxtpIY_MQHpYSUzUgPXpn7KJ-TCmRBy0pwOrdmOBSnFiIjPgEmhTT/exec"
 
-def scrape_pcc_tender():
+def run_test():
+    print("--- 啟動爬蟲任務 ---")
+    headers = {
+        'User-Agent': 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/120.0.0.0 Safari/537.36'
+    }
+    
+    # 測試網站是否可連線
+    target_url = "https://web.pcc.gov.tw/prkms/tender/common/noticeAll/readNoticeAll" # 請替換為您實際的查詢網址
+    print(f"正在連線至目標網站...")
+    
+    try:
+        res = requests.get(target_url, headers=headers, timeout=30)
+        print(f"網頁回應代碼: {res.status_code}")
+        
+        # 模擬測試資料發送 (這步最重要，確認 API 是通的)
+        test_data = {"id": "DEBUG-01", "title": "測試", "city": "台北市", "budget": "100", "reason": "測試"}
+        print("正在嘗試推送測試資料至 GAS...")
+        post_res = requests.post(GAS_URL, data=json.dumps(test_data))
+        print(f"GAS 回應內容: {post_res.text}")
+        
+    except Exception as e:
+        print(f"發生錯誤: {e}")
+
+if __name__ == "__main__":
+    run_test()
+    def scrape_pcc_tender():
     # 這裡以搜尋結果頁面為例 (實務上需填入政府採購網的查詢結果 URL)
     target_url = "https://web.pcc.gov.tw/prkms/tender/common/noticeAll/readNoticeAll?searchType=basic&..."
     
