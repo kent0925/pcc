@@ -1,0 +1,28 @@
+name: Northern_Tender_Scraper
+
+on:
+  schedule:
+    # 台灣時間每天早上 9 點執行 (UTC 1:00)
+    - cron: '0 1 * * *'
+  workflow_dispatch: # 允許您隨時手動點擊執行
+
+jobs:
+  build:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v3
+
+      - name: Set up Python
+        uses: actions/setup-python@v4
+        with:
+          python-version: '3.10'
+
+      - name: Install dependencies
+        run: |
+          pip install -r requirements.txt
+
+      - name: Run scraper
+        env:
+          GAS_URL: ${{ secrets.GAS_URL }} # 這裡會自動讀取您剛設定的 Secret
+        run: python pcc_north_monitor.py
