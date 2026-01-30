@@ -3,7 +3,7 @@ name: 標案自動抓取排程
 on:
   schedule:
     # 每天早上 9 點執行 (注意：GitHub 使用 UTC 時間，+8 為台灣時間)
-    - cron: '0 1 * * *' 
+    - cron: '0 3 * * *' 
   workflow_dispatch: # 允許手動點擊執行
 
 jobs:
